@@ -1,4 +1,4 @@
-# Document Forgery Detection — ELA + CNN
+# VerifAura AI — AI-Powered Document Forgery Detection
 
 Detects whether a document/image has been digitally forged by combining
 **Error Level Analysis (ELA)** preprocessing with a **CNN classifier**.
