@@ -1,0 +1,26 @@
+﻿# Virtual environment
+venv/
+
+# Dataset files (too large for GitHub)
+data/raw/
+data/processed/
+
+# Trained models (large binary files)
+models/
+
+# Uploaded images from the web app
+static/uploads/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

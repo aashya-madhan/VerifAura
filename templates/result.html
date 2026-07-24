@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analysis Result — DocGuard AI</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- Dynamic Ambient Background Blobs -->
+  <div class="bg-blob blob1"></div>
+  <div class="bg-blob blob2"></div>
+  <div class="bg-blob blob3"></div>
+
+  <div class="page-wrap">
+
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+      <a href="/" class="brand-badge">
+        <div class="brand-icon">🛡️</div>
+        <span>DocGuard AI</span>
+      </a>
+      <span class="brand-tag">Scan Complete</span>
+    </nav>
+
+    <main>
+
+      <!-- Verdict Banner -->
+      <div class="card verdict-card {{ 'forged' if result.label == 'FORGED' else 'authentic' }}">
+        <div class="verdict-icon-wrap">
+          {{ '⚠️' if result.label == 'FORGED' else '🛡️' }}
+        </div>
+        <div class="verdict-text">
+          <h2>{{ result.label }}</h2>
+          <p class="verdict-conf">{{ result.confidence }}% Confidence Rating</p>
+        </div>
+        <div class="verdict-badge {{ 'badge-forged' if result.label == 'FORGED' else 'badge-authentic' }}">
+          {{ 'Tampering Detected' if result.label == 'FORGED' else 'Authentic Document' }}
+        </div>
+      </div>
+
+      <!-- Confidence & Noise Meter -->
+      <div class="card meter-card">
+        <h3 class="card-title">Confidence Probability Breakdown</h3>
+        <div class="meter-labels">
+          <span class="meter-label-auth">🛡️ Authentic Probability</span>
+          <span class="meter-label-forg">⚠️ Forgery / Compression Anomaly</span>
+        </div>
+        <div class="meter-track">
+          <div class="meter-fill meter-auth" style="width:{{ ((1 - result.raw_score) * 100)|round(1) }}%"></div>
+          <div class="meter-fill meter-forg" style="width:{{ (result.raw_score * 100)|round(1) }}%"></div>
+        </div>
+        <div class="meter-pct">
+          <span>Authentic: {{ ((1 - result.raw_score) * 100)|round(1) }}%</span>
+          <span>Anomaly: {{ (result.raw_score * 100)|round(1) }}%</span>
+        </div>
+      </div>
+
+      <!-- Visual ELA & Heatmap Comparison -->
+      <div class="card images-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <h3 class="card-title" style="margin-bottom: 0;">Visual Noise &amp; ELA Analysis</h3>
+          
+          {% if ela_url %}
+          <!-- View mode tabs -->
+          <div class="analysis-mode-selector">
+            <button type="button" class="mode-tab active" id="tab-grid">Side-by-Side</button>
+            <button type="button" class="mode-tab" id="tab-slider">Interactive Slider</button>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Side-by-Side View -->
+        <div class="img-grid" id="view-grid" style="margin-top: 1.25rem;">
+          <div class="img-panel">
+            <p class="img-label">📄 Original Uploaded Image</p>
+            <div class="img-frame">
+              <img src="{{ original_url }}" alt="Original Document" />
+            </div>
+          </div>
+          <div class="img-panel">
+            <p class="img-label">🔬 Error Level Analysis (ELA)</p>
+            <div class="img-frame ela-frame">
+              {% if ela_url %}
+                <img src="{{ ela_url }}" alt="ELA Heatmap" />
+              {% else %}
+                <div class="ela-unavailable">ELA visualization unavailable</div>
+              {% endif %}
+            </div>
+            <p class="img-note">Highlighted/bright regions reveal re-saved or manipulated areas</p>
+          </div>
+        </div>
+
+        {% if ela_url %}
+        <!-- Interactive Split Slider View (hidden by default) -->
+        <div id="view-slider" hidden style="margin-top: 1.25rem;">
+          <div class="comparison-slider-container" id="slider-box">
+            <!-- Underneath image (ELA Heatmap) -->
+            <img src="{{ ela_url }}" class="comparison-img" alt="ELA Heatmap Overlay" />
+            
+            <!-- Overlay image (Original Document) -->
+            <div class="comparison-overlay" id="slider-overlay">
+              <img src="{{ original_url }}" id="slider-orig-img" alt="Original Image" />
+            </div>
+            
+            <!-- Handle -->
+            <div class="slider-handle" id="slider-handle">
+              <div class="handle-button">↔</div>
+            </div>
+          </div>
+          <p class="img-note">Drag slider left &amp; right to compare original scan directly against ELA noise heatmap</p>
+        </div>
+        {% endif %}
+
+      </div>
+
+      <!-- Technical Breakdown Accordion -->
+      <div class="card details-card">
+        <details open>
+          <summary class="details-summary">⚙ Technical &amp; Neural Metrics</summary>
+          <div class="details-grid">
+            <div class="detail-item">
+              <span class="detail-key">Raw CNN Score</span>
+              <span class="detail-val">{{ result.raw_score }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-key">Classification Cutoff</span>
+              <span class="detail-val">0.50</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-key">Tamper Risk Rating</span>
+              <span class="detail-val">{{ (result.raw_score * 100)|round(2) }}%</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-key">Authentic Score</span>
+              <span class="detail-val">{{ ((1 - result.raw_score) * 100)|round(2) }}%</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-key">Classifier Model</span>
+              <span class="detail-val">ELA + Deep CNN</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-key">Benchmark Dataset</span>
+              <span class="detail-val">CASIA v2.0</span>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <a href="/" class="btn-back">← Analyze Another Document</a>
+
+    </main>
+
+    <footer>
+      <p>Powered by TensorFlow &bull; Flask &bull; ELA Algorithm &bull; CASIA 2.0 Dataset</p>
+    </footer>
+
+  </div>
+
+  <script>
+    const tabGrid   = document.getElementById('tab-grid');
+    const tabSlider = document.getElementById('tab-slider');
+    const viewGrid   = document.getElementById('view-grid');
+    const viewSlider = document.getElementById('view-slider');
+
+    if (tabGrid && tabSlider) {
+      tabGrid.addEventListener('click', () => {
+        tabGrid.classList.add('active');
+        tabSlider.classList.remove('active');
+        viewGrid.hidden = false;
+        viewSlider.hidden = true;
+      });
+
+      tabSlider.addEventListener('click', () => {
+        tabSlider.classList.add('active');
+        tabGrid.classList.remove('active');
+        viewGrid.hidden = true;
+        viewSlider.hidden = false;
+        initSlider();
+      });
+    }
+
+    let isDragging = false;
+
+    function initSlider() {
+      const container = document.getElementById('slider-box');
+      const overlay   = document.getElementById('slider-overlay');
+      const handle    = document.getElementById('slider-handle');
+      const origImg   = document.getElementById('slider-orig-img');
+
+      if (!container || !overlay || !handle || !origImg) return;
+
+      origImg.style.width = container.offsetWidth + 'px';
+
+      function moveSlider(x) {
+        const rect = container.getBoundingClientRect();
+        let position = x - rect.left;
+        if (position < 0) position = 0;
+        if (position > rect.width) position = rect.width;
+        
+        const percentage = (position / rect.width) * 100;
+        overlay.style.width = percentage + '%';
+        handle.style.left = percentage + '%';
+      }
+
+      container.addEventListener('mousedown', e => {
+        isDragging = true;
+        moveSlider(e.clientX);
+      });
+
+      window.addEventListener('mousemove', e => {
+        if (isDragging) moveSlider(e.clientX);
+      });
+
+      window.addEventListener('mouseup', () => { isDragging = false; });
+
+      container.addEventListener('touchstart', e => {
+        isDragging = true;
+        moveSlider(e.touches[0].clientX);
+      });
+
+      window.addEventListener('touchmove', e => {
+        if (isDragging) moveSlider(e.touches[0].clientX);
+      });
+
+      window.addEventListener('touchend', () => { isDragging = false; });
+
+      window.addEventListener('resize', () => {
+        origImg.style.width = container.offsetWidth + 'px';
+      });
+    }
+  </script>
+
+</body>
+</html>
+
