@@ -1,5 +1,7 @@
 # VerifAura AI — Document Forgery Detection
 
+live demo - https://verifaura-ai.onrender.com
+
 AI-powered forgery detection using **Error Level Analysis (ELA)** + **Deep CNN**, trained on the CASIA v2.0 dataset.  
 Supports images (PNG, JPG, BMP, TIFF) and documents (PDF, DOCX, PPTX) — documents are analysed page-by-page.
 
