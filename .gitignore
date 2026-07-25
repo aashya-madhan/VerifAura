@@ -5,11 +5,14 @@ venv/
 data/raw/
 data/processed/
 
-# Trained models (large binary files)
-models/
+# Trained models — exclude large ones, keep the smoke model used by the app
+models/best_model.keras
+models/final_model*.keras
+models/training_curves*.png
 
-# Uploaded images from the web app
-static/uploads/
+# Uploaded images from the web app (keep the directory, ignore its contents)
+static/uploads/*
+!static/uploads/.gitkeep
 
 # Python cache
 __pycache__/

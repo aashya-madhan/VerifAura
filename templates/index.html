@@ -60,9 +60,11 @@
               </div>
               <p class="drop-title">Drag & drop your document here</p>
               <p class="drop-sub">or <label for="file-input" class="browse-link">browse from device</label></p>
-              <p class="drop-hint">Supports PNG, JPG, JPEG, BMP, TIFF &bull; Max 16 MB</p>
+              <p class="drop-hint">Images: PNG, JPG, BMP, TIFF &bull; Documents: PDF, DOCX, PPTX &bull; Max 32 MB</p>
             </div>
-            <input type="file" id="file-input" name="file" accept="image/*" required hidden />
+            <input type="file" id="file-input" name="file"
+                   accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
+                   required hidden />
           </div>
 
           <!-- Preview box (hidden until file selected) -->
@@ -70,19 +72,28 @@
             <div class="preview-header-bar">
               <div class="preview-status">
                 <span class="status-dot"></span>
-                Document Ready for ELA Scan
+                <span id="preview-status-text">Document Ready for ELA Scan</span>
               </div>
               <button type="button" class="remove-btn" id="remove-btn" title="Remove file">
                 ✕ Remove File
               </button>
             </div>
-            <div class="preview-img-wrap">
+            <!-- Image preview (hidden for docs) -->
+            <div class="preview-img-wrap" id="preview-img-wrap">
               <img id="preview-img" src="" alt="Selected Document Preview" />
+            </div>
+            <!-- Document preview (hidden for images) -->
+            <div class="preview-doc-wrap" id="preview-doc-wrap" hidden>
+              <div class="doc-icon-wrap">
+                <span id="doc-icon" class="doc-type-icon">📄</span>
+                <span id="doc-type-label" class="doc-type-label">Document</span>
+              </div>
+              <p class="doc-notice">Pages will be extracted and analysed individually with ELA + CNN.</p>
             </div>
             <div class="preview-info">
               <div>
                 <p class="preview-name" id="preview-name"></p>
-                <p class="preview-meta" id="preview-meta">Image file loaded</p>
+                <p class="preview-meta" id="preview-meta">File loaded</p>
               </div>
             </div>
           </div>
@@ -113,7 +124,7 @@
             <div class="step-num">01</div>
             <span class="step-icon">📤</span>
             <h3>Document Upload</h3>
-            <p>Ingests passports, IDs, certificates, and contract scans safely.</p>
+            <p>Upload images (PNG/JPG) or documents (PDF, DOCX, PPTX) — pages are extracted automatically.</p>
           </div>
           <div class="step-card">
             <div class="step-num">02</div>
@@ -145,14 +156,35 @@
   </div>
 
   <script>
-    const dropZone    = document.getElementById('drop-zone');
-    const fileInput   = document.getElementById('file-input');
-    const previewBox  = document.getElementById('preview-box');
-    const previewImg  = document.getElementById('preview-img');
-    const previewName = document.getElementById('preview-name');
-    const previewMeta = document.getElementById('preview-meta');
-    const submitBtn   = document.getElementById('submit-btn');
-    const removeBtn   = document.getElementById('remove-btn');
+    const dropZone       = document.getElementById('drop-zone');
+    const fileInput      = document.getElementById('file-input');
+    const previewBox     = document.getElementById('preview-box');
+    const previewImg     = document.getElementById('preview-img');
+    const previewImgWrap = document.getElementById('preview-img-wrap');
+    const previewDocWrap = document.getElementById('preview-doc-wrap');
+    const previewName    = document.getElementById('preview-name');
+    const previewMeta    = document.getElementById('preview-meta');
+    const previewStatus  = document.getElementById('preview-status-text');
+    const docIcon        = document.getElementById('doc-icon');
+    const docTypeLabel   = document.getElementById('doc-type-label');
+    const submitBtn      = document.getElementById('submit-btn');
+    const removeBtn      = document.getElementById('remove-btn');
+
+    const DOC_TYPES = {
+      'pdf':  { icon: '📑', label: 'PDF Document' },
+      'docx': { icon: '📝', label: 'Word Document' },
+      'doc':  { icon: '📝', label: 'Word Document' },
+      'pptx': { icon: '📊', label: 'PowerPoint Presentation' },
+      'ppt':  { icon: '📊', label: 'PowerPoint Presentation' },
+    };
+
+    function getExtension(filename) {
+      return filename.split('.').pop().toLowerCase();
+    }
+
+    function isDocumentFile(filename) {
+      return Object.keys(DOC_TYPES).includes(getExtension(filename));
+    }
 
     function formatFileSize(bytes) {
       if (bytes === 0) return '0 Bytes';
@@ -163,16 +195,30 @@
     }
 
     function showPreview(file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        previewImg.src = e.target.result;
-        previewName.textContent = file.name;
-        previewMeta.textContent = `${formatFileSize(file.size)} • ${file.type || 'Image'}`;
-        dropZone.hidden = true;
-        previewBox.hidden = false;
-        submitBtn.disabled = false;
-      };
-      reader.readAsDataURL(file);
+      previewName.textContent = file.name;
+      previewMeta.textContent = `${formatFileSize(file.size)} • ${file.type || getExtension(file.name).toUpperCase()}`;
+      dropZone.hidden = true;
+      previewBox.hidden = false;
+      submitBtn.disabled = false;
+
+      if (isDocumentFile(file.name)) {
+        // Document: show icon instead of image preview
+        const ext = getExtension(file.name);
+        const info = DOC_TYPES[ext] || { icon: '📄', label: 'Document' };
+        docIcon.textContent = info.icon;
+        docTypeLabel.textContent = info.label;
+        previewImgWrap.hidden = true;
+        previewDocWrap.hidden = false;
+        previewStatus.textContent = 'Document Ready for Multi-Page ELA Scan';
+      } else {
+        // Image: show thumbnail
+        previewImgWrap.hidden = false;
+        previewDocWrap.hidden = true;
+        previewStatus.textContent = 'Image Ready for ELA Scan';
+        const reader = new FileReader();
+        reader.onload = e => { previewImg.src = e.target.result; };
+        reader.readAsDataURL(file);
+      }
     }
 
     function clearFile() {
@@ -180,6 +226,8 @@
       previewImg.src = '';
       dropZone.hidden = false;
       previewBox.hidden = true;
+      previewImgWrap.hidden = false;
+      previewDocWrap.hidden = true;
       submitBtn.disabled = true;
     }
 
@@ -196,9 +244,9 @@
       e.preventDefault();
       dropZone.classList.remove('dragover');
       const file = e.dataTransfer.files[0];
-      if (file) { 
-        fileInput.files = e.dataTransfer.files; 
-        showPreview(file); 
+      if (file) {
+        fileInput.files = e.dataTransfer.files;
+        showPreview(file);
       }
     });
 
@@ -210,7 +258,10 @@
 
     document.getElementById('upload-form').addEventListener('submit', () => {
       submitBtn.disabled = true;
-      document.getElementById('btn-content').innerHTML = `<span class="spinner"></span> Processing ELA Heatmap &amp; CNN Model...`;
+      const isDoc = fileInput.files[0] && isDocumentFile(fileInput.files[0].name);
+      document.getElementById('btn-content').innerHTML = isDoc
+        ? `<span class="spinner"></span> Extracting Pages &amp; Running ELA Analysis...`
+        : `<span class="spinner"></span> Processing ELA Heatmap &amp; CNN Model...`;
     });
 
     window.addEventListener('pageshow', () => {

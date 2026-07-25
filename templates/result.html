@@ -26,7 +26,9 @@
 
     <main>
 
-      <!-- Verdict Banner -->
+      <!-- ══════════════════════════════════════════════════════════════
+           Verdict Banner
+      ══════════════════════════════════════════════════════════════ -->
       <div class="card verdict-card {{ 'forged' if result.label == 'FORGED' else 'authentic' }}">
         <div class="verdict-icon-wrap">
           {{ '⚠️' if result.label == 'FORGED' else '🛡️' }}
@@ -34,13 +36,24 @@
         <div class="verdict-text">
           <h2>{{ result.label }}</h2>
           <p class="verdict-conf">{{ result.confidence }}% Confidence Rating</p>
+          {% if is_document %}
+            <p class="verdict-pages">
+              {{ result.page_count }} page{{ 's' if result.page_count != 1 else '' }} analysed
+              &bull; Type: {{ result.file_type | upper }}
+              {% if result.label == 'FORGED' %}
+                &bull; {{ result.pages | selectattr('label', 'equalto', 'FORGED') | list | length }} page(s) flagged
+              {% endif %}
+            </p>
+          {% endif %}
         </div>
         <div class="verdict-badge {{ 'badge-forged' if result.label == 'FORGED' else 'badge-authentic' }}">
           {{ 'Tampering Detected' if result.label == 'FORGED' else 'Authentic Document' }}
         </div>
       </div>
 
-      <!-- Confidence & Noise Meter -->
+      <!-- ══════════════════════════════════════════════════════════════
+           Confidence Meter
+      ══════════════════════════════════════════════════════════════ -->
       <div class="card meter-card">
         <h3 class="card-title">Confidence Probability Breakdown</h3>
         <div class="meter-labels">
@@ -57,13 +70,15 @@
         </div>
       </div>
 
-      <!-- Visual ELA & Heatmap Comparison -->
+      <!-- ══════════════════════════════════════════════════════════════
+           IMAGE path: single ELA side-by-side / slider view
+      ══════════════════════════════════════════════════════════════ -->
+      {% if not is_document %}
       <div class="card images-card">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
           <h3 class="card-title" style="margin-bottom: 0;">Visual Noise &amp; ELA Analysis</h3>
-          
+
           {% if ela_url %}
-          <!-- View mode tabs -->
           <div class="analysis-mode-selector">
             <button type="button" class="mode-tab active" id="tab-grid">Side-by-Side</button>
             <button type="button" class="mode-tab" id="tab-slider">Interactive Slider</button>
@@ -71,7 +86,7 @@
           {% endif %}
         </div>
 
-        <!-- Side-by-Side View -->
+        <!-- Side-by-Side -->
         <div class="img-grid" id="view-grid" style="margin-top: 1.25rem;">
           <div class="img-panel">
             <p class="img-label">📄 Original Uploaded Image</p>
@@ -93,29 +108,85 @@
         </div>
 
         {% if ela_url %}
-        <!-- Interactive Split Slider View (hidden by default) -->
+        <!-- Interactive Slider -->
         <div id="view-slider" hidden style="margin-top: 1.25rem;">
           <div class="comparison-slider-container" id="slider-box">
-            <!-- Underneath image (ELA Heatmap) -->
             <img src="{{ ela_url }}" class="comparison-img" alt="ELA Heatmap Overlay" />
-            
-            <!-- Overlay image (Original Document) -->
             <div class="comparison-overlay" id="slider-overlay">
               <img src="{{ original_url }}" id="slider-orig-img" alt="Original Image" />
             </div>
-            
-            <!-- Handle -->
             <div class="slider-handle" id="slider-handle">
               <div class="handle-button">↔</div>
             </div>
           </div>
-          <p class="img-note">Drag slider left &amp; right to compare original scan directly against ELA noise heatmap</p>
+          <p class="img-note">Drag slider left &amp; right to compare original scan against ELA noise heatmap</p>
         </div>
         {% endif %}
-
       </div>
+      {% endif %}
 
-      <!-- Technical Breakdown Accordion -->
+      <!-- ══════════════════════════════════════════════════════════════
+           DOCUMENT path: per-page grid with ELA thumbnails
+      ══════════════════════════════════════════════════════════════ -->
+      {% if is_document %}
+      <div class="card images-card">
+        <h3 class="card-title">Per-Page ELA Analysis</h3>
+        <p class="img-note" style="margin-bottom: 1.25rem;">
+          Each page was independently rasterized and analysed with ELA + CNN.
+          Pages flagged as forged are highlighted in red.
+        </p>
+
+        <div class="pages-grid">
+          {% for page in result.pages %}
+          <div class="page-card {{ 'page-forged' if page.label == 'FORGED' else 'page-authentic' }}">
+
+            <!-- Page header -->
+            <div class="page-card-header">
+              <span class="page-num-badge">Page {{ page.page_num }}</span>
+              <span class="page-verdict-pill {{ 'pill-forged' if page.label == 'FORGED' else 'pill-authentic' }}">
+                {{ '⚠️ FORGED' if page.label == 'FORGED' else '🛡️ AUTHENTIC' }}
+              </span>
+            </div>
+
+            <!-- Images row -->
+            <div class="page-img-row">
+              <div class="page-img-col">
+                <p class="page-img-label">Original</p>
+                <div class="page-img-frame">
+                  <img src="{{ page.image_url }}" alt="Page {{ page.page_num }}" loading="lazy" />
+                </div>
+              </div>
+              <div class="page-img-col">
+                <p class="page-img-label">ELA</p>
+                <div class="page-img-frame ela-frame">
+                  {% if page.ela_url %}
+                    <img src="{{ page.ela_url }}" alt="ELA Page {{ page.page_num }}" loading="lazy" />
+                  {% else %}
+                    <div class="ela-unavailable">N/A</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Confidence bar -->
+            <div class="page-conf-row">
+              <span class="page-conf-label">Forgery Risk</span>
+              <div class="page-conf-bar">
+                <div class="page-conf-fill {{ 'conf-fill-forged' if page.label == 'FORGED' else 'conf-fill-authentic' }}"
+                     style="width: {{ (page.raw_score * 100)|round(1) }}%"></div>
+              </div>
+              <span class="page-conf-pct">{{ (page.raw_score * 100)|round(1) }}%</span>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ══════════════════════════════════════════════════════════════
+           Technical Breakdown
+      ══════════════════════════════════════════════════════════════ -->
       <div class="card details-card">
         <details open>
           <summary class="details-summary">⚙ Technical &amp; Neural Metrics</summary>
@@ -136,6 +207,20 @@
               <span class="detail-key">Authentic Score</span>
               <span class="detail-val">{{ ((1 - result.raw_score) * 100)|round(2) }}%</span>
             </div>
+            {% if is_document %}
+            <div class="detail-item">
+              <span class="detail-key">File Type</span>
+              <span class="detail-val">{{ result.file_type | upper }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-key">Pages Analysed</span>
+              <span class="detail-val">{{ result.page_count }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-key">Pages Flagged</span>
+              <span class="detail-val">{{ result.pages | selectattr('label', 'equalto', 'FORGED') | list | length }}</span>
+            </div>
+            {% endif %}
             <div class="detail-item">
               <span class="detail-key">Classifier Model</span>
               <span class="detail-val">ELA + Deep CNN</span>
@@ -148,7 +233,7 @@
         </details>
       </div>
 
-      <a href="/" class="btn-back">← Analyze Another Document</a>
+      <a href="/" class="btn-back">← Analyse Another Document</a>
 
     </main>
 
@@ -159,6 +244,7 @@
   </div>
 
   <script>
+    /* ── Image view: tab switcher ── */
     const tabGrid   = document.getElementById('tab-grid');
     const tabSlider = document.getElementById('tab-slider');
     const viewGrid   = document.getElementById('view-grid');
@@ -195,43 +281,21 @@
 
       function moveSlider(x) {
         const rect = container.getBoundingClientRect();
-        let position = x - rect.left;
-        if (position < 0) position = 0;
-        if (position > rect.width) position = rect.width;
-        
-        const percentage = (position / rect.width) * 100;
-        overlay.style.width = percentage + '%';
-        handle.style.left = percentage + '%';
+        let position = Math.max(0, Math.min(x - rect.left, rect.width));
+        const pct = (position / rect.width) * 100;
+        overlay.style.width = pct + '%';
+        handle.style.left   = pct + '%';
       }
 
-      container.addEventListener('mousedown', e => {
-        isDragging = true;
-        moveSlider(e.clientX);
-      });
-
-      window.addEventListener('mousemove', e => {
-        if (isDragging) moveSlider(e.clientX);
-      });
-
-      window.addEventListener('mouseup', () => { isDragging = false; });
-
-      container.addEventListener('touchstart', e => {
-        isDragging = true;
-        moveSlider(e.touches[0].clientX);
-      });
-
-      window.addEventListener('touchmove', e => {
-        if (isDragging) moveSlider(e.touches[0].clientX);
-      });
-
-      window.addEventListener('touchend', () => { isDragging = false; });
-
-      window.addEventListener('resize', () => {
-        origImg.style.width = container.offsetWidth + 'px';
-      });
+      container.addEventListener('mousedown', e => { isDragging = true; moveSlider(e.clientX); });
+      window.addEventListener('mousemove',    e => { if (isDragging) moveSlider(e.clientX); });
+      window.addEventListener('mouseup',      ()  => { isDragging = false; });
+      container.addEventListener('touchstart', e => { isDragging = true; moveSlider(e.touches[0].clientX); });
+      window.addEventListener('touchmove',    e => { if (isDragging) moveSlider(e.touches[0].clientX); });
+      window.addEventListener('touchend',     ()  => { isDragging = false; });
+      window.addEventListener('resize',       ()  => { origImg.style.width = container.offsetWidth + 'px'; });
     }
   </script>
 
 </body>
 </html>
-

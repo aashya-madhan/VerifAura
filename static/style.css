@@ -1015,3 +1015,235 @@ details[open] .details-summary::after {
   .steps-grid { grid-template-columns: 1fr; }
   .details-grid { grid-template-columns: 1fr; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   Document Analysis — new styles (added for PDF/DOCX/PPTX support)
+══════════════════════════════════════════════════════════════ */
+
+/* Document icon preview (replaces image thumbnail for doc types) */
+.preview-doc-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.doc-icon-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.doc-type-icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.35));
+}
+
+.doc-type-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.15);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.doc-notice {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 340px;
+}
+
+/* Verdict card extra info for documents */
+.verdict-pages {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+}
+
+/* Per-page grid on the result page */
+.pages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.page-card {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.page-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.page-card.page-forged {
+  border-color: var(--forged-border);
+  box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.15);
+}
+
+.page-card.page-authentic {
+  border-color: var(--authentic-border);
+}
+
+.page-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  background: rgba(14, 18, 34, 0.6);
+  border-bottom: 1px solid var(--border);
+}
+
+.page-num-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  font-family: var(--font-code);
+}
+
+.page-verdict-pill {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.4px;
+}
+
+.pill-forged {
+  background: var(--forged-bg);
+  color: var(--forged-color);
+  border: 1px solid var(--forged-border);
+}
+
+.pill-authentic {
+  background: var(--authentic-bg);
+  color: var(--authentic-color);
+  border: 1px solid var(--authentic-border);
+}
+
+.page-img-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.page-img-col {
+  padding: 0.6rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.page-img-col + .page-img-col {
+  border-left: 1px solid var(--border);
+}
+
+.page-img-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+
+.page-img-frame {
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-img-frame img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  max-height: 140px;
+}
+
+/* Confidence bar per page */
+.page-conf-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  border-top: 1px solid var(--border);
+  background: rgba(14, 18, 34, 0.4);
+}
+
+.page-conf-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  width: 75px;
+}
+
+.page-conf-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.page-conf-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.conf-fill-forged {
+  background: linear-gradient(90deg, #e11d48, #f43f5e);
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
+}
+
+.conf-fill-authentic {
+  background: linear-gradient(90deg, #059669, #10b981);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.page-conf-pct {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-code);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  width: 38px;
+  text-align: right;
+}
+
+.ela-unavailable {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+/* Responsive: stack page cards on small screens */
+@media (max-width: 600px) {
+  .pages-grid {
+    grid-template-columns: 1fr;
+  }
+}
