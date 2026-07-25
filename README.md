@@ -1,13 +1,3 @@
----
-title: VerifAura AI
-emoji: 🛡️
-colorFrom: indigo
-colorTo: purple
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # VerifAura AI — Document Forgery Detection
 
 AI-powered forgery detection using **Error Level Analysis (ELA)** + **Deep CNN**, trained on the CASIA v2.0 dataset.  
@@ -40,12 +30,8 @@ VerifAura-AI_project/
 │   ├── style.css
 │   └── uploads/               # Runtime upload storage
 ├── models/
-│   └── best_model_smoke.keras # Trained model (committed to repo)
+│   └── best_model_smoke.keras # Trained model
 ├── data/                      # Not committed (too large)
-├── Dockerfile                 # HuggingFace Spaces deployment
-├── Procfile                   # Render / Railway deployment
-├── render.yaml                # Render.com deploy config
-├── runtime.txt                # Python version
 └── requirements.txt
 ```
 
@@ -76,22 +62,6 @@ git add .
 git commit -m "your message"
 git push origin main
 ```
-
----
-
-## Deployment
-
-### HuggingFace Spaces (free, always-on)
-
-See the deployment steps in the GitHub repo README.
-
-### Render.com
-
-Uses `render.yaml` — connect repo and deploy.
-
-### Railway.app
-
-Uses `Procfile` — connect repo and deploy.
 
 ---
 
