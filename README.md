@@ -1,4 +1,4 @@
-# VerifAura AI — Document Forgery Detection
+# VerifAura — Document Forgery Detection
 
 live demo - https://verifaura-ai.onrender.com
 
