@@ -16,7 +16,7 @@ Supports images (PNG, JPG, BMP, TIFF) and documents (PDF, DOCX, PPTX) — docume
 ## Project structure
 
 ```
-VerifAura-AI_project/
+VerifAura-project/
 ├── src/
 │   ├── app.py                 # Flask web app
 │   ├── predict.py             # predict_image() + predict_document()
